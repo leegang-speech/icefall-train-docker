@@ -61,6 +61,12 @@ RUN apt-get update \
         unzip \
         tar \
         gzip \
+        libboost-all-dev \
+        zlib1g-dev \
+        libbz2-dev \
+        liblzma-dev \
+        qt5-qmake \
+        qtbase5-dev \
     && rm -rf /var/lib/apt/lists/*
 
 
@@ -71,7 +77,14 @@ RUN python -m pip install --upgrade \
     wheel \
     packaging
 
+# Kenlm 
+RUN git clone --depth 1 https://github.com/kpu/kenlm.git /opt/kenlm \
+    && mkdir -p /opt/kenlm/build \
+    && cd /opt/kenlm/build \
+    && cmake .. \
+    && cmake --build . -j"$(nproc)"  
 
+ENV PATH=/opt/kenlm/build/bin:${PATH}
 
 # PyTorch 2.4.0 + CUDA 12.1
 RUN python -m pip install \
@@ -175,11 +188,24 @@ RUN python -m pip install \
     librosa \
     torchinfo \
     pydub \
-    "numpy>=2.0.0"
+    "numpy>=2.0.0" \
+    "transformers==4.36.2" \
+    "kiwipiepy==0.23.0" \
+    "kiwipiepy_model==0.23.0" \
+    "safetensors==0.7.0" 
+
 
 
 RUN python -m pip install "pyctcdecode==0.5.0"
 
+COPY spacing /opt/spacing
+
+COPY language /opt/language
+
+COPY speech.dev /opt/speech.dev
+
+COPY src /opt/src
+ 
 # GPU가 없는 빌드 머신에서도 가능한 설치 검증
 # k2와 kaldifeat는 실제 import하지 않고 버전 메타데이터만 확인
 RUN python - <<'PY'
@@ -213,4 +239,3 @@ WORKDIR /workspace
 
 # 학습 자동 실행 없음
 CMD ["/bin/bash"]
- 
