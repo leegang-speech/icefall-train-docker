@@ -239,3 +239,4 @@ WORKDIR /workspace
 
 # 학습 자동 실행 없음
 CMD ["/bin/bash"]
+ 
